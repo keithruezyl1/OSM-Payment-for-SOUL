@@ -4,6 +4,7 @@ loadEnv(process.env.NODE_ENV || 'development', process.cwd());
 
 const REDIS_URL = process.env.REDIS_URL;
 const STRIPE_API_KEY = process.env.STRIPE_API_KEY;
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const IS_TEST = process.env.NODE_ENV === 'test';
 
 const cacheModule = IS_TEST
@@ -64,10 +65,11 @@ module.exports = defineConfig({
       options: {
         providers: [
           {
-            resolve: '@medusajs/medusa/payment-stripe',
+            resolve: '@medusajs/payment-stripe',
             id: 'stripe',
             options: {
               apiKey: STRIPE_API_KEY,
+              webhookSecret: STRIPE_WEBHOOK_SECRET,
             },
           },
         ],
@@ -79,8 +81,13 @@ module.exports = defineConfig({
   ],
   admin: {
     backendUrl: process.env.ADMIN_BACKEND_URL,
-    vite: () => {
+    vite: (config) => {
       return {
+        resolve: {
+          alias: {
+            '@lambdacurrymedusa-product-reviewsadmin': '@lambdacurry/medusa-product-reviews/admin'
+          }
+        },
         optimizeDeps: {
           include: ['@lambdacurry/medusa-plugins-sdk'],
         },

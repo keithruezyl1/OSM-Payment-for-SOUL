@@ -21395,6 +21395,7 @@ __metadata:
     "@medusajs/framework": "npm:2.7.0"
     "@medusajs/js-sdk": "npm:2.7.0"
     "@medusajs/medusa": "npm:2.7.0"
+    "@medusajs/payment-stripe": "npm:2.7.0"
     "@medusajs/test-utils": "npm:2.7.0"
     "@medusajs/types": "npm:2.7.0"
     "@mikro-orm/cli": "npm:6.4.3"
