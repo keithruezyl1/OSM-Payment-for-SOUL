@@ -25,9 +25,9 @@ export const Header: FC<HeaderProps> = () => {
   if (!headerNavigationItems) return <>Loading...</>;
 
   return (
-    <header className="sticky top-0 z-40 mkt-header text-white bg-[#3F432C] opacity-75 backdrop-blur">
+    <header className="sticky top-0 z-40 mkt-header border-b border-slate-200 bg-white/95 text-slate-900 backdrop-blur">
       <nav aria-label="Top">
-        <div className="bg-transparent">
+        <div>
           <div className="">
             <Container>
               {hasProducts && (
@@ -35,7 +35,7 @@ export const Header: FC<HeaderProps> = () => {
                   {!!cart && (
                     <IconButton
                       aria-label="open shopping cart"
-                      className="text-white sm:mr-0.5"
+                      className="text-slate-800 sm:mr-0.5"
                       icon={(iconProps) => (
                         <div className="relative">
                           <ShoppingBagIcon
@@ -65,7 +65,7 @@ export const Header: FC<HeaderProps> = () => {
                   'h-[var(--mkt-header-height)] flex sm:h-[var(--mkt-header-height-desktop)] flex-nowrap items-center justify-between gap-2 py-2',
                 )}
               >
-                <LogoStoreName className="xs:h-14 h-8" primary />
+                <LogoStoreName className="xs:h-14 h-8 text-slate-900" primary />
                 <div className="flex flex-wrap-reverse items-center gap-x-6 sm:justify-end">
                   {headerNavigationItems && (
                     <div className="hidden h-full gap-6 md:flex">
@@ -75,9 +75,9 @@ export const Header: FC<HeaderProps> = () => {
                           {...navItemProps}
                           newTab={new_tab}
                           className={({ isActive }) =>
-                            clsx('my-4 flex items-center whitespace-nowrap text-base font-normal', {
-                              'hover:underline': !isActive,
-                              'border-b-primary-200 border-b-2':
+                            clsx('my-4 flex items-center whitespace-nowrap text-sm font-medium uppercase tracking-wide', {
+                              'text-slate-600 hover:text-slate-900': !isActive,
+                              'border-b-slate-900 border-b-2 text-slate-900':
                                 isActive &&
                                 (!navItemProps.url.includes('#') ||
                                   activeSection === navItemProps.url.split('#')[1].split('?')[0]),
@@ -96,7 +96,7 @@ export const Header: FC<HeaderProps> = () => {
                       {!!cart && hasProducts && (
                         <IconButton
                           aria-label="open shopping cart"
-                          className="text-white hidden sm:mr-0.5 sm:inline-flex focus-within:!bg-primary-50"
+                          className="hidden text-slate-900 focus-within:!bg-primary-50 sm:mr-0.5 sm:inline-flex"
                           icon={(iconProps) => (
                             <div className="relative">
                               <ShoppingBagIcon
@@ -120,7 +120,7 @@ export const Header: FC<HeaderProps> = () => {
                         <IconButton
                           aria-label="open navigation menu"
                           onClick={() => setSideNavOpen(true)}
-                          className="hover:!bg-primary-50 focus:!bg-primary-50 sm:inline-flex text-white md:hidden"
+                          className="text-slate-900 hover:!bg-primary-50 focus:!bg-primary-50 sm:inline-flex md:hidden"
                           icon={Bars3Icon}
                         />
                       )}

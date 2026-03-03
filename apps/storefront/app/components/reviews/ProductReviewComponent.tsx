@@ -34,15 +34,7 @@ export const ProductReviewComponent: FC<ProductReviewProps> = ({ lineItem, produ
             lineItem={lineItem}
             rating={productReview?.rating}
             content={productReview?.content}
-            galleryImages={
-              productReview?.images
-                ? productReview.images?.map((image) => ({
-                    url: image.url,
-                    alt: "Customer's review image",
-                    name: "Customer's review image",
-                  }))
-                : undefined
-            }
+            galleryImages={[]}
             setEditing={setEditing}
           />
         ) : (

@@ -60,7 +60,7 @@ export const getRootLoader = async ({ request }: LoaderFunctionArgs) => {
       region,
       siteDetails: {
         store: {
-          name: 'BARRIO',
+          name: 'MarketHaus',
         },
         settings: siteSettings,
         headerNavigationItems,
@@ -75,3 +75,4 @@ export const getRootLoader = async ({ request }: LoaderFunctionArgs) => {
 export type RootLoader = typeof getRootLoader;
 
 export type RootLoaderResponse = RemixLoaderResponse<typeof getRootLoader>['data'];
+

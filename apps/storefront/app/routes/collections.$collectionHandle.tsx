@@ -34,22 +34,22 @@ export default function ProductCollectionRoute() {
 
   return (
     <Container className="pb-16">
-      <PageHeading className="w-full text-center text-5xl xs:text-6xl md:text-8xl font-ballet mt-24 font-normal lg:font-normal">
+      <PageHeading className="w-full text-center text-4xl md:text-6xl mt-16 font-semibold tracking-tight">
         {collection.title}
       </PageHeading>
 
       {collections.length > 1 && (
         <div className="flex flex-col w-full items-center">
           <div className="flex-1">
-            <div className="inline-flex gap-5 text-2xl font-italiana border-b border-primary mt-4 mb-8">
+            <div className="mt-4 mb-8 inline-flex gap-2 border-b border-slate-200 pb-2 text-sm">
               {collections.map((collection) => (
                 <NavLink
                   to={`/collections/${collection.handle}`}
                   key={collection.id}
                   className={({ isActive }) =>
-                    clsx('h-full p-4', {
-                      'font-bold border-b-2 border-primary': isActive,
-                      '!border-none active:': !isActive,
+                    clsx('h-full rounded-md px-3 py-2', {
+                      'bg-slate-900 text-white': isActive,
+                      'text-slate-700 hover:bg-slate-100': !isActive,
                     })
                   }
                 >

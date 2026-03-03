@@ -22,9 +22,7 @@ export const Hero: FC<{
             'mkt-section__background-overlay flex-1 z-0 bg-cover bg-no-repeat bg-center',
             backgroundClassName,
           )}
-          style={{
-            backgroundImage: `url(${image?.url})`,
-          }}
+          style={image?.url ? { backgroundImage: `url(${image.url})` } : undefined}
         />
         <div className="overflow-hidden z-10 w-full text-white">
           <div className="inline-grid gap-6 w-full">

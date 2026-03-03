@@ -1,10 +1,10 @@
 import { SoldOutBadge } from '@app/components/badges/SoldOutBadge';
 import { useProductInventory } from '@app/hooks/useProductInventory';
-import { StoreProduct } from '@medusajs/types';
+import type { MarketplaceProduct } from '@libs/types';
 import { FC, HTMLAttributes } from 'react';
 
 interface ProductBadgesProps extends HTMLAttributes<HTMLElement> {
-  product: StoreProduct;
+  product: MarketplaceProduct;
   className?: string;
 }
 

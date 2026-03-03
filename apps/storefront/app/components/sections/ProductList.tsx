@@ -3,9 +3,9 @@ import ProductCarousel from '@app/components/product/ProductCarousel';
 import { ProductCategoryTabs } from '@app/components/product/ProductCategoryTabs';
 import { ProductCollectionTabs } from '@app/components/product/ProductCollectionTabs';
 import { ProductListHeader } from '@app/components/product/ProductListHeader';
-import type { CustomAction, ProductListFilter } from '@libs/types';
+import type { CustomAction, MarketplaceProduct, ProductListFilter } from '@libs/types';
 import { buildSearchParamsFromObject } from '@libs/util/buildSearchParamsFromObject';
-import { StoreCollection, StoreProduct, StoreProductCategory } from '@medusajs/types';
+import { StoreCollection, StoreProductCategory } from '@medusajs/types';
 import clsx from 'clsx';
 import { type FC, HTMLAttributes, memo, useEffect, useState } from 'react';
 import { useFetcher, useParams } from 'react-router';
@@ -20,7 +20,7 @@ const ProductListBase: FC<{}> = () => {
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [selectedTab, setSelectedTab] = useState<number | undefined>(undefined);
   const fetcher = useFetcher<{
-    products: StoreProduct[];
+    products: MarketplaceProduct[];
     collection_tabs: StoreCollection[];
     category_tabs: StoreProductCategory[];
   }>();
@@ -48,8 +48,6 @@ const ProductListBase: FC<{}> = () => {
   };
 
   useEffect(() => {
-    // // Don't fetch if we have data coming from loader, which is configured to only be passed on non-preview routes.
-
     if (fetcher.data || fetcher.state === 'loading') {
       return;
     }
@@ -78,22 +76,22 @@ const ProductListBase: FC<{}> = () => {
 
   return (
     <>
-      {hasCollectionTabs && (
-        <div className="pb-6">
-          <ProductCollectionTabs
-            selectedIndex={selectedTab}
-            collections={collection_tabs}
-            onChange={(index) => handleTabChange(index, 'collection')}
-          />
-        </div>
-      )}
-      {hasCategoryTabs && (
-        <div className="pb-6">
-          <ProductCategoryTabs
-            selectedIndex={selectedTab}
-            categories={category_tabs}
-            onChange={(index) => handleTabChange(index, 'category')}
-          />{' '}
+      {(hasCollectionTabs || hasCategoryTabs) && (
+        <div className="mb-6 flex flex-nowrap items-center gap-3 overflow-x-auto pb-1">
+          {hasCollectionTabs && (
+            <ProductCollectionTabs
+              selectedIndex={selectedTab}
+              collections={collection_tabs}
+              onChange={(index) => handleTabChange(index, 'collection')}
+            />
+          )}
+          {hasCategoryTabs && (
+            <ProductCategoryTabs
+              selectedIndex={selectedTab}
+              categories={category_tabs}
+              onChange={(index) => handleTabChange(index, 'category')}
+            />
+          )}
         </div>
       )}
 

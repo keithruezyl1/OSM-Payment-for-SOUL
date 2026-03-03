@@ -3,7 +3,7 @@ import { config } from '@libs/util/server/config.server';
 
 export const siteSettings: SiteSettings = {
   storefront_url: config.STOREFRONT_URL,
-  description: '',
+  description: 'A curated marketplace for everyday apparel and essentials.',
   favicon: '/favicon.svg',
   social_facebook: 'https://www.facebook.com/',
   social_instagram: 'https://www.instagram.com/',

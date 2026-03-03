@@ -25,6 +25,7 @@ import type {
   ISalesChannelModuleService,
   IStoreModuleService,
 } from '@medusajs/types';
+import { SELLER_MODULE } from '../modules/seller';
 import { seedProducts } from './seed/products';
 import { generateReviewResponse, reviewContents, texasCustomers } from './seed/reviews';
 
@@ -197,16 +198,28 @@ export default async function seedDemoData({ container }: ExecArgs) {
     input: {
       collections: [
         {
-          title: 'Light Roasts',
-          handle: 'light-roasts',
+          title: "New Arrivals",
+          handle: "new-arrivals",
         },
         {
-          title: 'Medium Roasts',
-          handle: 'medium-roasts',
+          title: "Best Sellers",
+          handle: "best-sellers",
         },
         {
-          title: 'Dark Roasts',
-          handle: 'dark-roasts',
+          title: "Trending",
+          handle: "trending",
+        },
+        {
+          title: "Sale",
+          handle: "sale",
+        },
+        {
+          title: "Seasonal",
+          handle: "seasonal",
+        },
+        {
+          title: "Essentials",
+          handle: "essentials",
         },
       ],
     },
@@ -337,45 +350,133 @@ export default async function seedDemoData({ container }: ExecArgs) {
 
   logger.info('Seeding product data...');
 
-  const { result: categoryResult } = await createProductCategoriesWorkflow(container).run({
+    const { result: categoryResult } = await createProductCategoriesWorkflow(container).run({
     input: {
       product_categories: [
-        {
-          name: 'Blends',
-          is_active: true,
-        },
-        {
-          name: 'Single Origin',
-          is_active: true,
-        },
+        { name: "Women", is_active: true },
+        { name: "Men", is_active: true },
+        { name: "Kids", is_active: true },
+        { name: "Shoes", is_active: true },
+        { name: "Accessories", is_active: true },
+        { name: "Bags", is_active: true },
+        { name: "Activewear", is_active: true },
+        { name: "Outerwear", is_active: true },
+        { name: "Underwear", is_active: true },
+        { name: "Beauty", is_active: true },
       ],
     },
   });
 
-  const { result: productTagsResult } = await createProductTagsWorkflow(container).run({
+    const { result: productTagsResult } = await createProductTagsWorkflow(container).run({
     input: {
       product_tags: [
-        {
-          value: 'Ethiopia',
-        },
-        {
-          value: 'Colombia',
-        },
-        {
-          value: 'Best Sellers',
-        },
-        {
-          value: 'Brazil',
-        },
-        {
-          value: 'Africa',
-        },
-        {
-          value: 'Latin America',
-        },
+        { value: "New" },
+        { value: "Trending" },
+        { value: "Best Seller" },
+        { value: "Sustainable" },
+        { value: "Essentials" },
       ],
     },
   });
+  const sellerService = container.resolve(SELLER_MODULE);
+  const sellers = await sellerService.createSellers([
+    {
+      name: "Urban Thread",
+      handle: "urban-thread",
+      rating: 4.7,
+      review_count: 128,
+      city: "New York",
+      state: "NY",
+      zip: "10001",
+      country_code: "US",
+      logo_url: "/fiona.webp",
+      banner_url: null,
+    },
+    {
+      name: "Pacific Studio",
+      handle: "pacific-studio",
+      rating: 4.6,
+      review_count: 92,
+      city: "San Francisco",
+      state: "CA",
+      zip: "94105",
+      country_code: "US",
+      logo_url: "/fiona.webp",
+      banner_url: null,
+    },
+    {
+      name: "Lakefront Supply",
+      handle: "lakefront-supply",
+      rating: 4.5,
+      review_count: 64,
+      city: "Chicago",
+      state: "IL",
+      zip: "60601",
+      country_code: "US",
+      logo_url: "/fiona.webp",
+      banner_url: null,
+    },
+    {
+      name: "Desert Day",
+      handle: "desert-day",
+      rating: 4.4,
+      review_count: 51,
+      city: "Austin",
+      state: "TX",
+      zip: "73301",
+      country_code: "US",
+      logo_url: "/fiona.webp",
+      banner_url: null,
+    },
+    {
+      name: "Coastal Goods",
+      handle: "coastal-goods",
+      rating: 4.6,
+      review_count: 73,
+      city: "Miami",
+      state: "FL",
+      zip: "33101",
+      country_code: "US",
+      logo_url: "/fiona.webp",
+      banner_url: null,
+    },
+    {
+      name: "Canyon Supply",
+      handle: "canyon-supply",
+      rating: 4.5,
+      review_count: 58,
+      city: "Los Angeles",
+      state: "CA",
+      zip: "90001",
+      country_code: "US",
+      logo_url: "/fiona.webp",
+      banner_url: null,
+    },
+    {
+      name: "Northline",
+      handle: "northline",
+      rating: 4.7,
+      review_count: 80,
+      city: "Seattle",
+      state: "WA",
+      zip: "98101",
+      country_code: "US",
+      logo_url: "/fiona.webp",
+      banner_url: null,
+    },
+    {
+      name: "Peachtree Select",
+      handle: "peachtree-select",
+      rating: 4.4,
+      review_count: 46,
+      city: "Atlanta",
+      state: "GA",
+      zip: "30301",
+      country_code: "US",
+      logo_url: "/fiona.webp",
+      banner_url: null,
+    },
+  ]);
 
   const { result: productResult } = await createProductsWorkflow(container).run({
     input: {
@@ -388,9 +489,16 @@ export default async function seedDemoData({ container }: ExecArgs) {
       }),
     },
   });
+  await remoteLink.create(
+    productResult.map((product, index) => ({
+      [Modules.PRODUCT]: { product_id: product.id },
+      seller: { seller_id: sellers[index % sellers.length].id },
+    })),
+  );
 
   for (const product of productResult) {
     const firstVariant = product.variants[0];
+    const usdPrice = (((firstVariant as any).prices as any[] | undefined)?.find((price: any) => price.currency_code === 'usd')?.amount ?? 35) as number;
 
     // Determine a random number of reviews between 5 and 10 for this product
     const numReviews = Math.floor(Math.random() * 6) + 5; // Random number between 5 and 10
@@ -426,12 +534,12 @@ export default async function seedDemoData({ container }: ExecArgs) {
               quantity: 1,
               title: product.title,
               thumbnail: product.thumbnail ?? undefined,
-              unit_price: 18.0,
+              unit_price: usdPrice,
             },
           ],
           transactions: [
             {
-              amount: 18.0,
+              amount: usdPrice,
               currency_code: 'usd',
             },
           ],
@@ -459,7 +567,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
         first_name: customer.first_name,
         name: `${customer.first_name} ${customer.last_name}`,
         email: customer.email,
-        images: review.images,
+        images: [],
       });
     }
 
@@ -482,3 +590,10 @@ export default async function seedDemoData({ container }: ExecArgs) {
   logger.info('Finished seeding product data.');
   logger.info(`PUBLISHABLE API KEY: ${publishableApiKey.token}`);
 }
+
+
+
+
+
+
+

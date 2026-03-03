@@ -19,8 +19,8 @@ import '@app/styles/global.css';
 import { useRootLoaderData } from './hooks/useRootLoaderData';
 
 export const getRootMeta: MetaFunction = ({ data }) => {
-  const title = 'Barrio Store';
-  const description = 'Discover our artisan-roasted coffee, crafted with care and delivered to your door.';
+  const title = 'MarketHaus';
+  const description = 'Shop apparel, accessories, and everyday essentials from independent sellers.';
   const ogTitle = title;
   const ogDescription = description;
   const ogImage = '';
@@ -121,3 +121,4 @@ export function ErrorBoundary() {
     </html>
   );
 }
+

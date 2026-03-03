@@ -1,7 +1,7 @@
-import { StoreProduct } from '@medusajs/types';
+import type { MarketplaceProduct } from '@libs/types';
 import { useMemo } from 'react';
 
-export const useProductInventory = (product: StoreProduct) => {
+export const useProductInventory = (product: MarketplaceProduct) => {
   return useMemo(() => {
     const totalInventory =
       product.variants?.reduce((total, variant) => {

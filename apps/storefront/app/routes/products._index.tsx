@@ -42,6 +42,11 @@ export default function ProductsIndexRoute() {
         <Breadcrumbs breadcrumbs={breadcrumbs} />
       </div>
 
+      <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+        <span className="font-semibold text-slate-900">{count}</span> listings available. Sort, filter, and compare
+        seller details before checkout.
+      </div>
+
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="flex-1">
           <ProductListWithPagination

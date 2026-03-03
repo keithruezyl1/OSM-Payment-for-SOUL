@@ -61,6 +61,11 @@ module.exports = defineConfig({
   ],
   modules: [
     {
+      resolve: "./src/modules/seller",
+      options: {},
+      definition: { isQueryable: true },
+    },
+    {
       resolve: '@medusajs/medusa/payment',
       options: {
         providers: [
@@ -95,3 +100,5 @@ module.exports = defineConfig({
     },
   },
 });
+
+

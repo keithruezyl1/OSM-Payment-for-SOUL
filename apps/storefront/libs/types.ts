@@ -1,4 +1,4 @@
-import { BaseAddress, StoreDTO } from '@medusajs/types';
+import { BaseAddress, StoreDTO, StoreProduct } from '@medusajs/types';
 import { BasePaymentSession } from '@medusajs/types/dist/http/payment/common';
 import { PaymentMethod as StripePaymentMethod } from '@stripe/stripe-js';
 
@@ -117,3 +117,23 @@ export interface CustomPaymentSession extends BasePaymentSession {
 }
 
 export type CreditCardBrand = 'visa' | 'mastercard' | 'amex' | 'discover' | 'jcb' | 'diners' | 'unionpay' | 'unknown';
+
+export interface SellerSummary {
+  id: string;
+  name: string;
+  handle: string;
+  rating?: number;
+  review_count?: number;
+  city?: string;
+  state?: string;
+  zip?: string;
+  country_code?: string;
+  logo_url?: string;
+  banner_url?: string;
+}
+
+export type MarketplaceProduct = StoreProduct & {
+  seller?: SellerSummary | null;
+  eta_days?: number | null;
+};
+

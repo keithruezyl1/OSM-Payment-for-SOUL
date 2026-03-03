@@ -1,4 +1,4 @@
-import { StoreProduct } from '@medusajs/types';
+import type { MarketplaceProduct } from '@libs/types';
 import clsx from 'clsx';
 import type { FC } from 'react';
 import { NavLink, useNavigation } from 'react-router';
@@ -7,7 +7,7 @@ import { ProductListHeader, type ProductListHeaderProps } from './ProductListHea
 import { ProductListItem } from './ProductListItem';
 
 export interface ProductListProps extends Partial<ProductListHeaderProps> {
-  products?: StoreProduct[];
+  products?: MarketplaceProduct[];
   className?: string;
 }
 
@@ -41,5 +41,4 @@ export const ProductGrid: FC<ProductListProps> = ({
   );
 };
 
-// required for lazy loading this component
 export default ProductGrid;

@@ -1,72 +1,202 @@
-import { CreateProductWorkflowInputDTO, ProductCollectionDTO, ProductTagDTO } from '@medusajs/framework/types';
-import { ProductStatus } from '@medusajs/utils';
+import type { CreateProductWorkflowInputDTO, ProductCollectionDTO, ProductTagDTO } from "@medusajs/framework/types";
+import { ProductStatus } from "@medusajs/utils";
+
+const SIZES = ["XS", "S", "M", "L", "XL"];
+const COLORS = ["Black", "White", "Navy", "Red", "Beige"];
+const SHARED_PRODUCT_IMAGE_URL = "/pic.jpg";
+
+const buildVariants = (skuBase: string, prices: { usd: number; cad: number }) => {
+  const variants = [] as any[];
+
+  for (const size of SIZES) {
+    for (const color of COLORS) {
+      variants.push({
+        title: `${size} / ${color}`,
+        sku: `${skuBase}-${size}-${color}`.toUpperCase().replace(/\s+/g, "-"),
+        options: {
+          Size: size,
+          Color: color,
+        },
+        manage_inventory: false,
+        prices: [
+          { amount: prices.cad, currency_code: "cad" },
+          { amount: prices.usd, currency_code: "usd" },
+        ],
+      });
+    }
+  }
+
+  return variants;
+};
 
 const buildBaseProductData = ({
   sales_channels,
   sku,
-  prices: { usd, cad },
+  prices,
 }: {
   sales_channels: { id: string }[];
   sku: string;
-  prices: {
-    usd: number;
-    cad: number;
-  };
+  prices: { usd: number; cad: number };
 }) => ({
   options: [
-    {
-      title: 'Grind',
-      values: ['Whole Bean', 'Ground'],
-    },
-    {
-      title: 'Size',
-      values: ['16oz'],
-    },
+    { title: "Size", values: SIZES },
+    { title: "Color", values: COLORS },
   ],
-  sales_channels: sales_channels.map(({ id }) => ({
-    id,
-  })),
-  variants: [
-    {
-      title: 'Whole Bean',
-      sku: `${sku}-WHOLE-BEAN`,
-      options: {
-        Grind: 'Whole Bean',
-        Size: '16oz',
-      },
-      manage_inventory: false,
-      prices: [
-        {
-          amount: cad,
-          currency_code: 'cad',
-        },
-        {
-          amount: usd,
-          currency_code: 'usd',
-        },
-      ],
-    },
-    {
-      title: 'Ground',
-      sku: `${sku}-GROUND`,
-      options: {
-        Grind: 'Ground',
-        Size: '16oz',
-      },
-      manage_inventory: false,
-      prices: [
-        {
-          amount: cad,
-          currency_code: 'cad',
-        },
-        {
-          amount: usd,
-          currency_code: 'usd',
-        },
-      ],
-    },
-  ],
+  sales_channels: sales_channels.map(({ id }) => ({ id })),
+  variants: buildVariants(sku, prices),
 });
+
+const productCatalog = [
+  {
+    category: "Women",
+    collection: "New Arrivals",
+    basePrice: 35,
+    products: [
+      "Flowy Wrap Dress",
+      "Ribbed Knit Tee",
+      "Pleated Midi Skirt",
+      "Silk Blend Blouse",
+      "High-Rise Trousers",
+      "Relaxed Cardigan",
+    ],
+  },
+  {
+    category: "Men",
+    collection: "Best Sellers",
+    basePrice: 42,
+    products: [
+      "Structured Overshirt",
+      "Everyday Oxford",
+      "Slim Chino Pants",
+      "Crewneck Sweater",
+      "Utility Jacket",
+      "Classic Polo",
+    ],
+  },
+  {
+    category: "Kids",
+    collection: "Trending",
+    basePrice: 22,
+    products: [
+      "Soft Hoodie Set",
+      "Playday Joggers",
+      "Graphic Tee Pack",
+      "Everyday Denim",
+      "Puffer Vest",
+      "Weekend Dress",
+    ],
+  },
+  {
+    category: "Shoes",
+    collection: "Best Sellers",
+    basePrice: 55,
+    products: [
+      "Minimal Sneakers",
+      "City Loafers",
+      "Trail Runners",
+      "Classic Ankle Boots",
+      "Slip-On Sandals",
+      "Everyday Flats",
+    ],
+  },
+  {
+    category: "Accessories",
+    collection: "New Arrivals",
+    basePrice: 18,
+    products: [
+      "Structured Belt",
+      "Statement Earrings",
+      "Layered Necklace",
+      "Classic Watch Band",
+      "Woven Scarf",
+      "Metal Cuff",
+    ],
+  },
+  {
+    category: "Bags",
+    collection: "Trending",
+    basePrice: 48,
+    products: [
+      "Everyday Tote",
+      "Crossbody Sling",
+      "Mini Satchel",
+      "Weekender Bag",
+      "Quilted Shoulder",
+      "Convertible Backpack",
+    ],
+  },
+  {
+    category: "Activewear",
+    collection: "Best Sellers",
+    basePrice: 30,
+    products: [
+      "Performance Leggings",
+      "Training Shorts",
+      "Breathable Tank",
+      "Zip Track Jacket",
+      "Studio Sports Bra",
+      "Lightweight Hoodie",
+    ],
+  },
+  {
+    category: "Outerwear",
+    collection: "Seasonal",
+    basePrice: 70,
+    products: [
+      "Wool Blend Coat",
+      "Cropped Bomber",
+      "Insulated Parka",
+      "Waterproof Shell",
+      "Quilted Liner",
+      "Denim Jacket",
+    ],
+  },
+  {
+    category: "Underwear",
+    collection: "Essentials",
+    basePrice: 16,
+    products: [
+      "Seamless Briefs",
+      "Comfort Bralette",
+      "Cotton Boxer Pack",
+      "Mesh Triangle",
+      "Smoothing Bodysuit",
+      "Lounge Shorts",
+    ],
+  },
+  {
+    category: "Beauty",
+    collection: "New Arrivals",
+    basePrice: 20,
+    products: [
+      "Hydration Serum",
+      "Glow Moisturizer",
+      "Daily SPF",
+      "Tinted Balm",
+      "Nourish Mask",
+      "Refresh Mist",
+    ],
+  },
+];
+
+const categoryDescriptions: Record<string, string> = {
+  Women: "Modern silhouettes and versatile pieces designed for weekday-to-weekend wear.",
+  Men: "Reliable wardrobe staples with tailored fits and everyday comfort.",
+  Kids: "Durable and comfortable essentials made for active days and easy styling.",
+  Shoes: "City-ready footwear with practical comfort, grip, and all-day support.",
+  Accessories: "Polished finishing pieces that add personality without overcomplicating your look.",
+  Bags: "Functional carry options built for daily use, work, and weekend travel.",
+  Activewear: "Breathable performance basics that balance movement, comfort, and style.",
+  Outerwear: "Layer-ready outer pieces built for changing weather and clean structure.",
+  Underwear: "Soft foundational essentials focused on fit, stretch, and comfort.",
+  Beauty: "Daily-care favorites with lightweight textures and dependable results.",
+};
+
+const tagForIndex = (tags: ProductTagDTO[], index: number) => {
+  const tagPool = ["New", "Trending", "Best Seller", "Sustainable", "Essentials"];
+  const tagValue = tagPool[index % tagPool.length];
+  return tags.filter((tag) => tag.value === tagValue).map((tag) => tag.id);
+};
 
 export const seedProducts = ({
   collections,
@@ -80,208 +210,41 @@ export const seedProducts = ({
   categories: { id: string; name: string }[];
   sales_channels: { id: string }[];
   shipping_profile_id: string;
-}): CreateProductWorkflowInputDTO[] => [
-  {
-    title: 'Barrio Blend - Medium Roast',
-    description:
-      'Dive into the rich tapestry of flavors with our Barrio Blend, a masterful medium-dark roast that harmonizes a symphony of taste. Each sip reveals layers of complexity, with a gentle sweetness that dances on the palate, making it an exquisite choice for those who cherish a well-rounded coffee experience.',
-    handle: 'barrio-blend-medium-roast',
-    status: ProductStatus.PUBLISHED,
-    category_ids: categories.filter(({ name }) => name === 'Blends').map(({ id }) => id),
-    tag_ids: tags.filter((t) => ['Best Seller', 'Latin America', 'Africa'].includes(t.value)).map((t) => t.id),
-    thumbnail: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Barrio-Blend.jpg',
-    collection_id: collections.find(({ title }) => title === 'Medium Roasts')?.id,
-    shipping_profile_id,
-    images: [
-      {
-        url: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Barrio-Blend.jpg',
-      },
-    ],
-    ...buildBaseProductData({
-      sales_channels,
-      sku: 'BARRIO-BLEND',
-      prices: {
-        usd: 18.0,
-        cad: 24.0,
-      },
-    }),
-  },
-  {
-    title: 'Midnight Dark - Dark Roast',
-    description:
-      'Awaken your senses with the Midnight Dark blend, a bold and luxurious dark roast that captivates with its deep, intense flavors. This coffee is a testament to meticulous roasting, offering a velvety texture and a lingering sweetness that envelops the palate, perfect for those who savor a robust and full-bodied cup.',
-    handle: 'midnight-dark-roast',
-    status: ProductStatus.PUBLISHED,
-    collection_id: collections.find(({ title }) => title === 'Dark Roasts')?.id,
-    category_ids: categories.filter(({ name }) => name === 'Blends').map(({ id }) => id),
-    tag_ids: tags.filter((t) => ['Brazil'].includes(t.value)).map((t) => t.id),
-    thumbnail: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Midnight-Dark-Roast.jpg',
-    shipping_profile_id,
-    images: [
-      {
-        url: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Midnight-Dark-Roast.jpg',
-      },
-    ],
-    ...buildBaseProductData({
-      sales_channels,
-      sku: 'MIDNIGHT-DARK',
-      prices: {
-        usd: 20.0,
-        cad: 27.0,
-      },
-    }),
-  },
-  {
-    title: 'Sunrise Single-Origin - Light Roast',
-    description:
-      'Embrace the dawn with our Sunrise Single-Origin, a light roast that celebrates the unique terroir of its beans. This coffee is a vibrant expression of bright, floral notes and a subtle sweetness, offering a refreshing and invigorating experience that is ideal for starting your day or enjoying a serene afternoon.',
-    handle: 'sunrise-single-origin-light-roast',
-    status: ProductStatus.PUBLISHED,
-    collection_id: collections.find(({ title }) => title === 'Light Roasts')?.id,
-    category_ids: categories.filter(({ name }) => name === 'Single Origin').map(({ id }) => id),
-    tag_ids: tags.filter((t) => ['Best Seller', 'Ethiopia'].includes(t.value)).map((t) => t.id),
-    thumbnail: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Sunrise-Single.jpg',
-    shipping_profile_id,
-    images: [
-      {
-        url: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Sunrise-Single.jpg',
-      },
-    ],
-    ...buildBaseProductData({
-      sales_channels,
-      sku: 'SUNRISE-SINGLE',
-      prices: {
-        usd: 22.0,
-        cad: 29.0,
-      },
-    }),
-  },
-  {
-    title: 'Barrio Decaf - Medium Roast',
-    description:
-      'Uncover the smooth elegance of our Barrio Decaf, a medium roast crafted for those who desire the rich essence of coffee without the caffeine. This blend is a delicate balance of flavors, with a hint of sweetness that provides a satisfying and delightful experience, any time of the day or night.',
-    handle: 'barrio-decaf-medium-roast',
-    collection_id: collections.find(({ title }) => title === 'Medium Roasts')?.id,
-    category_ids: categories.filter(({ name }) => name === 'Blends').map(({ id }) => id),
-    status: ProductStatus.PUBLISHED,
-    tag_ids: tags.filter((t) => ['Colombia'].includes(t.value)).map((t) => t.id),
-    thumbnail: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Barrio-Decaf.jpg',
-    shipping_profile_id,
-    images: [
-      {
-        url: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Barrio-Decaf.jpg',
-      },
-    ],
-    ...buildBaseProductData({
-      sales_channels,
-      sku: 'BARRIO-DECAF',
-      prices: {
-        usd: 20.0,
-        cad: 27.0,
-      },
-    }),
-  },
-  {
-    title: 'Coconut Mocha Delight - Medium Roast',
-    description:
-      'Escape to a tropical paradise with our Coconut Mocha Delight, a medium roast that marries the rich, robust flavors of coffee with the exotic allure of coconut and a whisper of chocolate. This enchanting blend is a journey of taste, perfect for those seeking a unique and indulgent coffee experience.',
-    handle: 'coconut-mocha-delight-medium-roast',
-    collection_id: collections.find(({ title }) => title === 'Medium Roasts')?.id,
-    category_ids: categories.filter(({ name }) => name === 'Blends').map(({ id }) => id),
-    status: ProductStatus.PUBLISHED,
-    tag_ids: tags.filter((t) => ['Colombia'].includes(t.value)).map((t) => t.id),
-    thumbnail: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Coconut-Mocha.jpg',
-    shipping_profile_id,
-    images: [
-      {
-        url: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Coconut-Mocha.jpg',
-      },
-    ],
-    ...buildBaseProductData({
-      sales_channels,
-      sku: 'COCONUT-MOCHA',
-      prices: {
-        usd: 22.0,
-        cad: 29.0,
-      },
-    }),
-  },
+}): CreateProductWorkflowInputDTO[] => {
+  const products: CreateProductWorkflowInputDTO[] = [];
+  let index = 0;
 
-  {
-    title: 'Chili Choco Spice - Dark Roast',
-    description:
-      'Embark on a daring flavor journey with our Chili Choco Spice, a dark roast that boldly combines the fiery warmth of chili with the decadent richness of chocolate. This adventurous blend is a thrilling experience for the palate, offering a spicy-sweet symphony that is both exciting and deeply satisfying.',
-    handle: 'chili-choco-spice-dark-roast',
-    collection_id: collections.find(({ title }) => title === 'Dark Roasts')?.id,
-    category_ids: categories.filter(({ name }) => name === 'Blends').map(({ id }) => id),
-    status: ProductStatus.PUBLISHED,
-    tag_ids: tags.filter((t) => ['Guatemala'].includes(t.value)).map((t) => t.id),
-    thumbnail: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Chili-Choco.jpg',
-    shipping_profile_id,
-    images: [
-      {
-        url: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Chili-Choco.jpg',
-      },
-    ],
-    ...buildBaseProductData({
-      sales_channels,
-      sku: 'CHILI-CHOCO',
-      prices: {
-        usd: 24.0,
-        cad: 31.0,
-      },
-    }),
-  },
+  for (const group of productCatalog) {
+    for (const title of group.products) {
+      index += 1;
+      const sku = `${group.category}-${index}`.toUpperCase().replace(/\s+/g, "-");
+      const handle = `${group.category}-${title}`
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
 
-  {
-    title: 'Cardamom Spiced Roast - Dark Roast',
-    description:
-      'Transport yourself to distant lands with our Cardamom Spiced Roast, a dark blend infused with the exotic and aromatic essence of cardamom. This luxurious coffee offers a rich and captivating taste experience, enveloping you in a world of flavor that is both intriguing and comforting.',
-    handle: 'cardamom-spiced-roast-dark-blend',
-    collection_id: collections.find(({ title }) => title === 'Dark Roasts')?.id,
-    category_ids: categories.filter(({ name }) => name === 'Blends').map(({ id }) => id),
-    status: ProductStatus.PUBLISHED,
-    tag_ids: tags.filter((t) => ['Yemen'].includes(t.value)).map((t) => t.id),
-    thumbnail: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Cardamom-Spice.jpg',
-    shipping_profile_id,
-    images: [
-      {
-        url: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Cardamom-Spice.jpg',
-      },
-    ],
-    ...buildBaseProductData({
-      sales_channels,
-      sku: 'CARDAMOM-SPICE',
-      prices: {
-        usd: 25.0,
-        cad: 32.0,
-      },
-    }),
-  },
+      products.push({
+        title,
+        description: `${title} - ${categoryDescriptions[group.category]}`,
+        handle,
+        status: ProductStatus.PUBLISHED,
+        category_ids: categories.filter(({ name }) => name === group.category).map(({ id }) => id),
+        tag_ids: tagForIndex(tags, index),
+        thumbnail: SHARED_PRODUCT_IMAGE_URL,
+        collection_id: collections.find(({ title }) => title === group.collection)?.id,
+        shipping_profile_id,
+        images: [{ url: SHARED_PRODUCT_IMAGE_URL }],
+        ...buildBaseProductData({
+          sales_channels,
+          sku,
+          prices: {
+            usd: group.basePrice * 100,
+            cad: (group.basePrice + 10) * 100,
+          },
+        }),
+      });
+    }
+  }
 
-  {
-    title: 'Twilight Peak - Dark Roast',
-    description:
-      'Discover the majestic flavors of our Twilight Peak, a dark roast sourced from the pristine highlands of Peru. This coffee is a celebration of bold, smooth flavors with a refined finish, offering a rich and satisfying experience that is perfect for those who appreciate a well-crafted cup.',
-    handle: 'twilight-peak-dark-roast',
-    collection_id: collections.find(({ title }) => title === 'Dark Roasts')?.id,
-    category_ids: categories.filter(({ name }) => name === 'Blends').map(({ id }) => id),
-    status: ProductStatus.PUBLISHED,
-    tag_ids: tags.filter((t) => ['Peru'].includes(t.value)).map((t) => t.id),
-    thumbnail: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Twilight-Peak.jpg',
-    shipping_profile_id,
-    images: [
-      {
-        url: 'https://lambdacurrysites.s3.us-east-1.amazonaws.com/barrio/Twilight-Peak.jpg',
-      },
-    ],
-    ...buildBaseProductData({
-      sales_channels,
-      sku: 'TWILIGHT-PEAK',
-      prices: {
-        usd: 26.0,
-        cad: 33.0,
-      },
-    }),
-  },
-];
+  return products;
+};

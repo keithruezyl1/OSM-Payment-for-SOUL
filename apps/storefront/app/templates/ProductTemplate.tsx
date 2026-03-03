@@ -4,6 +4,7 @@ import { Container } from '@app/components/common/container/Container';
 import { FieldLabel } from '@app/components/common/forms/fields/FieldLabel';
 import { Grid } from '@app/components/common/grid/Grid';
 import { GridColumn } from '@app/components/common/grid/GridColumn';
+import { Image } from '@app/components/common/images/Image';
 import { SubmitButton } from '@app/components/common/remix-hook-form/buttons/SubmitButton';
 import { QuantitySelector } from '@app/components/common/remix-hook-form/field-groups/QuantitySelector';
 import { ProductImageGallery } from '@app/components/product/ProductImageGallery';
@@ -27,7 +28,8 @@ import {
   selectVariantFromMatrixBySelectedOptions,
   selectVariantMatrix,
 } from '@libs/util/products';
-import { StoreProduct, StoreProductOptionValue, StoreProductVariant } from '@medusajs/types';
+import { StoreProductOptionValue, StoreProductVariant } from '@medusajs/types';
+import type { MarketplaceProduct } from '@libs/types';
 import truncate from 'lodash/truncate';
 import { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useFetcher } from 'react-router';
@@ -38,7 +40,7 @@ import { RemixFormProvider, useRemixForm } from 'remix-hook-form';
  * @param product - The product to generate breadcrumbs for
  * @returns An array of breadcrumb objects
  */
-const getBreadcrumbs = (product: StoreProduct) => {
+const getBreadcrumbs = (product: MarketplaceProduct) => {
   const breadcrumbs: Breadcrumb[] = [
     {
       label: (
@@ -66,7 +68,7 @@ const getBreadcrumbs = (product: StoreProduct) => {
 };
 
 export interface ProductTemplateProps {
-  product: StoreProduct;
+  product: MarketplaceProduct;
   reviewsCount: number;
   reviewStats?: StoreProductReviewStats;
 }
@@ -327,8 +329,8 @@ export const ProductTemplate = ({ product, reviewsCount, reviewStats }: ProductT
                           <div>
                             <Breadcrumbs className="mb-6 text-primary" breadcrumbs={breadcrumbs} />
 
-                            <header className="flex gap-4 mb-2">
-                              <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl sm:tracking-tight">
+                            <header className="mb-2 flex gap-4">
+                              <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl sm:tracking-tight">
                                 {product.title}
                               </h1>
                               <div className="flex-1" />
@@ -360,6 +362,45 @@ export const ProductTemplate = ({ product, reviewsCount, reviewStats }: ProductT
                               )}
                             </p>
                           </section>
+
+                          {product.seller && (
+                            <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                              <div className="flex items-start gap-3">
+                                <Image
+                                  src={product.seller.logo_url || '/fiona.webp'}
+                                  alt={`${product.seller.name} profile`}
+                                  className="h-12 w-12 rounded-full border border-slate-200 object-cover"
+                                />
+                                <div className="flex-1">
+                                  <p className="font-semibold text-slate-900">Sold by {product.seller.name}</p>
+                                  {product.seller.city && (
+                                    <p>
+                                      {product.seller.city}
+                                      {product.seller.state ? `, ${product.seller.state}` : ''}
+                                    </p>
+                                  )}
+                                  <p className="mt-1">
+                                    Seller rating {product.seller.rating ?? 4.5} • {product.seller.review_count ?? 0} reviews
+                                  </p>
+                                  <p className="mt-1">
+                                    {typeof product.eta_days === 'number'
+                                      ? `Est. ${product.eta_days} days`
+                                      : 'Enter address for ETA'}
+                                  </p>
+                                </div>
+                                {product.seller.handle && (
+                                  <Button
+                                    as={(buttonProps) => (
+                                      <Link to={`/shops/${product.seller?.handle || ''}`} {...buttonProps} />
+                                    )}
+                                    className="!h-8 !px-3 !py-1 !text-xs !font-semibold"
+                                  >
+                                    Visit shop
+                                  </Button>
+                                )}
+                              </div>
+                            </section>
+                          )}
 
                           {productSelectOptions && productSelectOptions.length > 5 && (
                             <section aria-labelledby="product-options" className="product-options">
@@ -478,3 +519,4 @@ export const ProductTemplate = ({ product, reviewsCount, reviewStats }: ProductT
     </>
   );
 };
+

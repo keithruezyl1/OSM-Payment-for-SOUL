@@ -1,6 +1,6 @@
 import { ScrollArrowButtons } from '@app/components/common/buttons/ScrollArrowButtons';
 import { useScrollArrows } from '@app/hooks/useScrollArrows';
-import { StoreProduct } from '@medusajs/types';
+import type { MarketplaceProduct } from '@libs/types';
 import clsx from 'clsx';
 import { type FC, memo } from 'react';
 import { NavLink } from 'react-router';
@@ -9,18 +9,17 @@ import type { ProductListItemProps } from './ProductListItem';
 import { ProductListItem } from './ProductListItem';
 
 export interface ProductCarouselProps {
-  products?: StoreProduct[];
+  products?: MarketplaceProduct[];
   className?: string;
   renderItem?: FC<ProductListItemProps>;
 }
 
-export const ProductRow: FC<{ products: StoreProduct[] }> = memo(({ products }) => {
+export const ProductRow: FC<{ products: MarketplaceProduct[] }> = memo(({ products }) => {
   return (
     <>
       {products.map((product) => (
         <div
           key={product.id}
-          // Note: not sure if there is a better way to handle the width of these items, but these match closely to our grid layout
           className="xs:w-[47.5%] xs:snap-start mr-6 inline-block w-[100%] snap-center last:mr-0 sm:mr-6 sm:snap-start md:w-[31.2%] xl:mr-8 xl:w-[23%]"
         >
           <NavLink prefetch="viewport" to={`/products/${product.handle}`} viewTransition>

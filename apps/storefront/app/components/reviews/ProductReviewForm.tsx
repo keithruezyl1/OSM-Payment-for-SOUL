@@ -1,4 +1,3 @@
-import { ImageUploadWithPreview, ProductReviewImage } from '@app/components/common/ImageUpload/ImageUploadWithPreview';
 import { Actions } from '@app/components/common/actions';
 import { Button } from '@app/components/common/buttons';
 import { FieldLabel } from '@app/components/common/forms/fields/FieldLabel';
@@ -20,7 +19,6 @@ const schema = z.object({
   order_line_item_id: z.string().min(1, 'Line item is required'),
   rating: z.number().min(1, 'Rating is required'),
   content: z.string().optional().default(''),
-  existing_images: z.string().optional(),
   review_request_id: z.string().optional(),
 });
 
@@ -28,7 +26,6 @@ export interface ProductReviewFormValues {
   id?: string;
   rating?: number;
   content?: string;
-  images?: ProductReviewImage[];
   order_line_item_id: string;
   order_id: string;
 }
@@ -65,8 +62,6 @@ export const ProductReviewForm: FC<ProductReviewFormProps> = ({
   const defaultValues = productReview
     ? { rating: productReview.rating, content: productReview.content, images: productReview.images }
     : { rating: 5, content: '' };
-
-  const existingImages = productReview?.images || [];
 
   const form = useRemixForm({
     resolver: zodResolver(schema),
@@ -121,8 +116,6 @@ export const ProductReviewForm: FC<ProductReviewFormProps> = ({
         <TextField type="hidden" name="order_line_item_id" value={lineItem.id} />
         {requestId && <TextField type="hidden" name="review_request_id" value={requestId} />}
         {isComplete && <TextField type="hidden" name="id" value={productReview.id} />}
-
-        <ImageUploadWithPreview existingImages={existingImages} className="mb-2 mt-6" />
 
         <Textarea name="content" placeholder="Add your review" className="sm:col-span-12" />
 

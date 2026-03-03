@@ -18,7 +18,6 @@ import { BaseCartShippingMethod } from '@medusajs/types/dist/http/cart/common';
 import { FC, Fragment, useEffect, useMemo } from 'react';
 import { useFetcher } from 'react-router';
 import { RemixFormProvider, useRemixForm } from 'remix-hook-form';
-import { StripeSecurityImage } from '../images/StripeSecurityImage';
 import { CheckoutSectionHeader } from './CheckoutSectionHeader';
 import { ShippingOptionsRadioGroup } from './checkout-fields/ShippingOptionsRadioGroup/ShippingOptionsRadioGroup';
 
@@ -88,7 +87,9 @@ export const CheckoutDeliveryMethod: FC = () => {
 
       {!isActiveStep && (
         <>
-          {cart.shipping_methods?.length === 0 && <StripeSecurityImage className="mt-4" />}
+          {cart.shipping_methods?.length === 0 && (
+            <p className="mt-4 text-xs text-slate-500">Secure payment and delivery options available at checkout.</p>
+          )}
           <dl>
             {cart.shipping_methods?.map((shippingMethod: BaseCartShippingMethod, shippingMethodIndex) => {
               const { id, shipping_option_id, amount } = shippingMethod;
