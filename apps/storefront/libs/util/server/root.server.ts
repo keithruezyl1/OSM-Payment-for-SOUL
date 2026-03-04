@@ -6,7 +6,7 @@ import type { HttpTypes } from '@medusajs/types';
 import { type LoaderFunctionArgs, data as remixData } from 'react-router';
 import { RemixLoaderResponse } from 'types/remix';
 import { config } from './config.server';
-import { getSelectedRegionId, setSelectedRegionId } from './cookies.server';
+import { getCartId, getSelectedRegionId, removeCartId, setSelectedRegionId } from './cookies.server';
 import { enrichLineItems, retrieveCart } from './data/cart.server';
 import { getCustomer } from './data/customer.server';
 import { getSelectedRegion, listRegions } from './data/regions.server';
@@ -27,6 +27,11 @@ export const getRootLoader = async ({ request }: LoaderFunctionArgs) => {
   ]);
 
   const headers = new Headers();
+
+  const cartId = await getCartId(request.headers);
+  if (cartId && !cart) {
+    await removeCartId(headers);
+  }
 
   const currentRegionCookieId = await getSelectedRegionId(headers);
 

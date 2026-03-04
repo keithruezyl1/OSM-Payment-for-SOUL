@@ -42,9 +42,11 @@ If seed data is stale or seeded in major units, storefront renders `$0.00` (or w
 Use Postman or terminal with header:
 - `x-publishable-api-key: <current pk_...>`
 
+Get a region ID first: `GET http://localhost:9000/store/regions` (e.g. `reg_01KJBTZK9WGCZXM4FHVW9VH6S6`).
+
 Call:
 ```http
-GET http://localhost:9000/store/marketplace/products?limit=1&offset=0
+GET http://localhost:9000/store/marketplace/products?limit=1&offset=0&region_id=<region_id>
 ```
 
 Expected:
@@ -58,3 +60,7 @@ Expected:
 2. Server not restarted after env change
 3. Browser cache not refreshed
 4. `medusa:init` not rerun after seed edits
+5. **Variant–price link missing**: Run the repair script:
+   ```bash
+   cd apps/medusa && npx medusa exec ./src/scripts/repair-variant-prices.ts
+   ```

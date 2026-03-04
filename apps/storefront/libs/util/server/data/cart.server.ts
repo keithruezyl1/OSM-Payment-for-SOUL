@@ -56,6 +56,11 @@ export const updateCart = withAuthHeaders(async (request, authHeaders, data: Htt
   return sdk.store.cart.update(cartId, data, {}, authHeaders).catch(medusaError);
 });
 
+const isCartNotFoundError = (err: unknown): boolean => {
+  const msg = err instanceof Error ? err.message : String(err);
+  return msg.toLowerCase().includes('cart') && (msg.toLowerCase().includes('not found') || msg.includes('404'));
+};
+
 export const addToCart = withAuthHeaders(
   async (
     request,
@@ -72,20 +77,32 @@ export const addToCart = withAuthHeaders(
     }
 
     const cartId = await getCartId(request.headers);
+    const region = await getSelectedRegion(request.headers);
 
     if (cartId) {
-      return await sdk.store.cart.createLineItem(
-        cartId,
-        {
-          variant_id: variantId,
-          quantity,
-        },
-        {},
-        authHeaders,
-      );
+      try {
+        const result = await sdk.store.cart.createLineItem(
+          cartId,
+          {
+            variant_id: variantId,
+            quantity,
+          },
+          {},
+          authHeaders,
+        );
+        return result;
+      } catch (err) {
+        if (isCartNotFoundError(err)) {
+          const cartResp = await sdk.store.cart.create(
+            { region_id: region.id, items: [{ variant_id: variantId, quantity }] },
+            {},
+            authHeaders,
+          );
+          return cartResp;
+        }
+        throw err;
+      }
     }
-
-    const region = await getSelectedRegion(request.headers);
 
     const cart = await createCart(request, { region_id: region.id, items: [{ variant_id: variantId, quantity }] });
 

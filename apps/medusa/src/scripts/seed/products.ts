@@ -192,6 +192,18 @@ const categoryDescriptions: Record<string, string> = {
   Beauty: "Daily-care favorites with lightweight textures and dependable results.",
 };
 
+export function getBasePriceForTitle(title: string): { usd: number; cad: number } {
+  for (const group of productCatalog) {
+    if (group.products.includes(title)) {
+      return {
+        usd: group.basePrice * 100,
+        cad: (group.basePrice + 10) * 100,
+      };
+    }
+  }
+  return { usd: 3500, cad: 4500 };
+}
+
 const tagForIndex = (tags: ProductTagDTO[], index: number) => {
   const tagPool = ["New", "Trending", "Best Seller", "Sustainable", "Essentials"];
   const tagValue = tagPool[index % tagPool.length];

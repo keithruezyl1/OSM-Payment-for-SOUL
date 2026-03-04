@@ -7,3 +7,8 @@ stripe api key = sk_test_51T4sy60kyjchLpjfBPDGo44MbLruYV91xK632sm5rT3YQapKQm8mvR
 card = 424242 424242 424242 424242
 expiry = any future date
 CVV = 123
+
+
+# giles stripe keys
+publishable = pk_test_51T5Gnb3geqf5map5tNNTQRO9FEQfRk0UT8968N6HTQsdAFxlgeqbbdfLZMBlxsoSgAMjiisfm5ToqRK7xO3YsHCA00F8S4MZsM
+secret = sk_test_51T5Gnb3geqf5map5KKxIzAHrmJoJ9vFUP9kmccGQthlfq3zi88cJASQqHcgbS7JaxVzaGA2QOX6YsCZRQpok9z7e007P4ksXZx 

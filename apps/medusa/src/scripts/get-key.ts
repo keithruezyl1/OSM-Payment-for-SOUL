@@ -13,7 +13,7 @@ export default async function getKey({ container }: ExecArgs) {
   });
 
   if (apiKey) {
-    logger.info(`CURRENT_PUBLISHABLE_KEY: ${apiKey.token}`);
+    logger.info(`PUBLISHABLE API KEY: ${apiKey.token}`);
   } else {
     logger.error('No storefront publishable key found.');
   }

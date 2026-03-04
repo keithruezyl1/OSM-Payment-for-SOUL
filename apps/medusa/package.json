@@ -16,6 +16,7 @@
     "nukedb": "docker-compose down -v && docker-compose up -d && powershell -Command \"Start-Sleep -Seconds 10\"",
     "build": "medusa build",
     "seed": "medusa exec ./src/scripts/seed.ts",
+    "repair-prices": "medusa exec ./src/scripts/repair-variant-prices.ts",
     "start": "medusa start",
     "dev": "medusa develop",
     "sync": "medusa db:sync-links",
@@ -27,7 +28,8 @@
     "test:integration:http": "TEST_TYPE=integration:http NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
     "test:integration:modules": "TEST_TYPE=integration:modules NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit",
     "test:unit": "TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit",
-    "medusa:init": "yarn run nukedb && medusa db:create --db medusa2 && yarn run migrate && yarn run sync && yarn run seed && yarn run add-user",
+    "get-key": "medusa exec ./src/scripts/get-key.ts",
+    "medusa:init": "yarn run nukedb && medusa db:create --db medusa2 && yarn run migrate && yarn run sync && yarn run seed && yarn run add-user && yarn run get-key",
     "add-user": "medusa user --email admin@medusa-test.com --password supersecret && medusa user --email admin@lambdacurry.dev --password password",
     "typecheck": "tsc --noEmit"
   },

@@ -2,10 +2,19 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework";
 import { refetchEntity } from "@medusajs/framework/http";
 import {
   ContainerRegistrationKeys,
+  Modules,
   ProductStatus,
   remoteQueryObjectFromString,
 } from "@medusajs/framework/utils";
 import { estimateEtaDays } from "../../../../utils/eta";
+
+const toNumber = (v: unknown): number | null => {
+  if (v == null) return null;
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "object" && v !== null && "value" in v) return Number((v as { value: unknown }).value) || null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
 
 const MARKETPLACE_PRODUCT_FIELDS = [
   "*",
@@ -14,6 +23,7 @@ const MARKETPLACE_PRODUCT_FIELDS = [
   "options.values.*",
   "variants.*",
   "variants.options.*",
+  "variants.price_set.prices",
   "collection.*",
   "categories.*",
   "tags.*",
@@ -137,6 +147,25 @@ export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void
       pricingContext = { region_id: region.id, currency_code: region.currency_code };
     }
   }
+  if (!pricingContext) {
+    const storeModuleService = req.scope.resolve(Modules.STORE);
+    const regionModuleService = req.scope.resolve(Modules.REGION);
+    const stores = await storeModuleService.listStores({});
+    const store = stores[0];
+    const defaultRegionId = store?.default_region_id;
+    if (defaultRegionId) {
+      const region = await refetchEntity("region", defaultRegionId, req.scope, ["id", "currency_code"]);
+      if (region) {
+        pricingContext = { region_id: region.id, currency_code: region.currency_code };
+      }
+    }
+    if (!pricingContext) {
+      const [firstRegion] = await regionModuleService.listRegions({}, { take: 1 });
+      if (firstRegion) {
+        pricingContext = { region_id: firstRegion.id, currency_code: firstRegion.currency_code };
+      }
+    }
+  }
 
   const fields = Array.from(new Set(MARKETPLACE_PRODUCT_FIELDS));
 
@@ -161,10 +190,87 @@ export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void
 
   const { rows } = await remoteQuery(queryObject);
 
+  const currencyCode = pricingContext?.currency_code ?? "usd";
+
+  const priceSetIdToCalculated = new Map<string, { calculated_amount: number; original_amount: number; currency_code: string }>();
+  if (pricingContext && rows.length > 0) {
+    const priceSetIds = Array.from(
+      new Set(
+        (rows as any[]).flatMap((p) =>
+          (p.variants ?? []).map((v: any) => v.price_set?.id).filter(Boolean)
+        )
+      )
+    ) as string[];
+    if (priceSetIds.length > 0) {
+      const pricingModuleService = req.scope.resolve(Modules.PRICING) as {
+        calculatePrices: (
+          filters: { id: string[] },
+          options?: { context: Record<string, string> }
+        ) => Promise<Array<{ id: string; calculated_amount?: unknown; original_amount?: unknown; currency_code?: string | null }>>;
+      };
+      const fillMap = (calculated: Array<{ id: string; calculated_amount?: unknown; original_amount?: unknown; currency_code?: string | null }>) => {
+        for (const cp of calculated ?? []) {
+          if (priceSetIdToCalculated.has(cp.id)) continue;
+          const calc = toNumber(cp.calculated_amount ?? cp.original_amount);
+          const orig = toNumber(cp.original_amount ?? cp.calculated_amount);
+          if (calc != null && cp.currency_code) {
+            priceSetIdToCalculated.set(cp.id, {
+              calculated_amount: calc,
+              original_amount: orig ?? calc,
+              currency_code: cp.currency_code,
+            });
+          }
+        }
+      };
+      let calculated = await pricingModuleService.calculatePrices(
+        { id: priceSetIds },
+        { context: { region_id: pricingContext.region_id, currency_code: pricingContext.currency_code } }
+      );
+      fillMap(calculated ?? []);
+      if (priceSetIdToCalculated.size < priceSetIds.length) {
+        calculated = await pricingModuleService.calculatePrices(
+          { id: priceSetIds.filter((id) => !priceSetIdToCalculated.has(id)) },
+          { context: { currency_code: pricingContext.currency_code } }
+        );
+        fillMap(calculated ?? []);
+      }
+    }
+  }
+
+  const applyPriceFallback = (product: any) => {
+    const variants = product.variants ?? [];
+    for (const variant of variants) {
+      if (variant.calculated_price?.calculated_amount != null) continue;
+      const psetId = variant.price_set?.id;
+      const fromPricing = psetId ? priceSetIdToCalculated.get(psetId) : undefined;
+      if (fromPricing) {
+        variant.calculated_price = {
+          calculated_amount: fromPricing.calculated_amount,
+          original_amount: fromPricing.original_amount,
+          currency_code: fromPricing.currency_code,
+        };
+        continue;
+      }
+      const prices = variant.price_set?.prices ?? [];
+      const price = Array.isArray(prices)
+        ? prices.find((p: any) => p?.currency_code === currencyCode)
+        : null;
+      if (price?.amount != null) {
+        variant.calculated_price = {
+          calculated_amount: price.amount,
+          original_amount: price.amount,
+          currency_code: price.currency_code,
+        };
+      }
+    }
+    return product;
+  };
+
   let products = rows.map((product: any) => {
-    const seller = normalizeSeller(product);
+    const withFallback = applyPriceFallback(product);
+    const seller = normalizeSeller(withFallback);
     const eta_days = seller ? estimateEtaDays(seller.zip, customerZip) : null;
-    return { ...product, seller, eta_days };
+    return { ...withFallback, seller, eta_days };
   });
 
   if (sellerId) {
