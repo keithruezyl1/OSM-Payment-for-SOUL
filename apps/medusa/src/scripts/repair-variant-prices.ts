@@ -30,7 +30,7 @@ export default async function repairVariantPrices({ container }: ExecArgs) {
   }> = [];
 
   for (const product of products) {
-    const { usd, cad } = getBasePriceForTitle(product.title);
+    const { usd, php } = getBasePriceForTitle(product.title);
     const variants = product.variants ?? [];
 
     for (const variant of variants) {
@@ -39,7 +39,7 @@ export default async function repairVariantPrices({ container }: ExecArgs) {
         product_id: product.id,
         prices: [
           { amount: usd, currency_code: "usd" },
-          { amount: cad, currency_code: "cad" },
+          { amount: php, currency_code: "php" },
         ],
       });
     }

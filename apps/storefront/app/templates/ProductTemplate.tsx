@@ -139,6 +139,7 @@ export const ProductTemplate = ({ product, reviewsCount, reviewStats }: ProductT
 
   const breadcrumbs = getBreadcrumbs(product);
   const currencyCode = region.currency_code;
+  const seller = (product as any).seller ?? (product as any).sellers?.[0] ?? null;
   const [controlledOptions, setControlledOptions] = useState<Record<string, string>>(defaultValues.options);
   const selectedOptions = useMemo(
     () => product.options?.map(({ id }) => controlledOptions[id]),
@@ -322,6 +323,42 @@ export const ProductTemplate = ({ product, reviewsCount, reviewStats }: ProductT
                     <Grid className="!gap-0">
                       <GridColumn className="mb-8 md:col-span-6 lg:col-span-7 xl:pr-16 xl:pl-9">
                         <ProductImageGallery key={product.id} product={product} />
+                        <section className="mt-6 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-sm">
+                          <div className="flex items-start gap-3">
+                            <Image
+                              src="/fiona.jpg"
+                              alt={`${seller?.name || 'Seller'} profile`}
+                              className="h-12 w-12 rounded-full border border-slate-200 object-cover"
+                            />
+                            <div className="flex-1">
+                              <p className="font-semibold text-slate-900">
+                                Sold by {seller?.name || 'Seller unavailable'}
+                              </p>
+                              {seller?.city && (
+                                <p>
+                                  {seller.city}
+                                  {seller.state ? `, ${seller.state}` : ''}
+                                </p>
+                              )}
+                              <p className="mt-1">
+                                Seller rating {seller?.rating ?? 4.5} - {seller?.review_count ?? 0} reviews
+                              </p>
+                              {typeof product.eta_days === 'number' && (
+                                <p className="mt-1">Est. {product.eta_days} days</p>
+                              )}
+                            </div>
+                            {seller?.handle && (
+                              <Button
+                                as={(buttonProps) => (
+                                  <Link to={`/shops/${seller.handle}`} {...buttonProps} />
+                                )}
+                                className="!h-8 !px-3 !py-1 !text-xs !font-semibold"
+                              >
+                                Visit shop
+                              </Button>
+                            )}
+                          </div>
+                        </section>
                       </GridColumn>
 
                       <GridColumn className="flex flex-col md:col-span-6 lg:col-span-5">
@@ -362,45 +399,6 @@ export const ProductTemplate = ({ product, reviewsCount, reviewStats }: ProductT
                               )}
                             </p>
                           </section>
-
-                          {product.seller && (
-                            <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                              <div className="flex items-start gap-3">
-                                <Image
-                                  src={product.seller.logo_url || '/fiona.webp'}
-                                  alt={`${product.seller.name} profile`}
-                                  className="h-12 w-12 rounded-full border border-slate-200 object-cover"
-                                />
-                                <div className="flex-1">
-                                  <p className="font-semibold text-slate-900">Sold by {product.seller.name}</p>
-                                  {product.seller.city && (
-                                    <p>
-                                      {product.seller.city}
-                                      {product.seller.state ? `, ${product.seller.state}` : ''}
-                                    </p>
-                                  )}
-                                  <p className="mt-1">
-                                    Seller rating {product.seller.rating ?? 4.5} • {product.seller.review_count ?? 0} reviews
-                                  </p>
-                                  <p className="mt-1">
-                                    {typeof product.eta_days === 'number'
-                                      ? `Est. ${product.eta_days} days`
-                                      : 'Enter address for ETA'}
-                                  </p>
-                                </div>
-                                {product.seller.handle && (
-                                  <Button
-                                    as={(buttonProps) => (
-                                      <Link to={`/shops/${product.seller?.handle || ''}`} {...buttonProps} />
-                                    )}
-                                    className="!h-8 !px-3 !py-1 !text-xs !font-semibold"
-                                  >
-                                    Visit shop
-                                  </Button>
-                                )}
-                              </div>
-                            </section>
-                          )}
 
                           {productSelectOptions && productSelectOptions.length > 5 && (
                             <section aria-labelledby="product-options" className="product-options">
@@ -519,4 +517,6 @@ export const ProductTemplate = ({ product, reviewsCount, reviewStats }: ProductT
     </>
   );
 };
+
+
 

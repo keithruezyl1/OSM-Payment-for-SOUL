@@ -18,7 +18,7 @@ export function formatPrice(amount: number | null, options: FormatPriceOptions) 
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
-  }).format((amount || 0) * quantity);
+  }).format(((amount || 0) / 100) * quantity);
 }
 
 export function sortProductVariantsByPrice(product: StoreProduct) {

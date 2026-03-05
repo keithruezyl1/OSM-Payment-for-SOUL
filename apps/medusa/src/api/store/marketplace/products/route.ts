@@ -28,8 +28,11 @@ const MARKETPLACE_PRODUCT_FIELDS = [
   "categories.*",
   "tags.*",
   "*seller",
+  "seller.*",
   "variants.calculated_price",
 ];
+
+const missingSellerLoggedProducts = new Set<string>();
 
 const parseList = (value: unknown) => {
   if (!value) return [] as string[];
@@ -51,9 +54,32 @@ const parseNumber = (value: unknown, fallback: number) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const normalizeSellerCandidate = (candidate: any): any | null => {
+  if (!candidate) return null;
+
+  if (Array.isArray(candidate)) {
+    return candidate.length ? normalizeSellerCandidate(candidate[0]) : null;
+  }
+
+  if (typeof candidate !== "object") return null;
+
+  if (candidate.seller) {
+    return normalizeSellerCandidate(candidate.seller);
+  }
+
+  if (candidate.id && candidate.handle) {
+    return candidate;
+  }
+
+  return null;
+};
+
 const normalizeSeller = (product: any) => {
-  if (product?.seller) return Array.isArray(product.seller) ? product.seller[0] : product.seller;
-  if (product?.sellers) return Array.isArray(product.sellers) ? product.sellers[0] : product.sellers;
+  const candidates = [product?.seller, product?.sellers, product?.["*seller"]];
+  for (const candidate of candidates) {
+    const seller = normalizeSellerCandidate(candidate);
+    if (seller) return seller;
+  }
   return null;
 };
 
@@ -97,6 +123,7 @@ const getMinVariantPrice = (product: any) => {
 };
 
 export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void> {
+  const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER);
   const regionId = typeof req.query.region_id === "string" ? req.query.region_id : undefined;
   const customerZip = typeof req.query.customer_zip === "string" ? req.query.customer_zip : undefined;
 
@@ -269,6 +296,15 @@ export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void
   let products = rows.map((product: any) => {
     const withFallback = applyPriceFallback(product);
     const seller = normalizeSeller(withFallback);
+    if (!seller && process.env.NODE_ENV !== "production") {
+      const productKey = withFallback?.id ?? withFallback?.title;
+      if (productKey && !missingSellerLoggedProducts.has(productKey)) {
+        missingSellerLoggedProducts.add(productKey);
+        logger.warn(
+          `[store/marketplace/products] Missing seller relation for product ${withFallback?.id ?? "unknown"} (${withFallback?.title ?? "unknown"})`,
+        );
+      }
+    }
     const eta_days = seller ? estimateEtaDays(seller.zip, customerZip) : null;
     return { ...withFallback, seller, eta_days };
   });

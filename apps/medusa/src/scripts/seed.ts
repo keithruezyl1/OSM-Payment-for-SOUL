@@ -26,7 +26,7 @@ import type {
   IStoreModuleService,
 } from '@medusajs/types';
 import { SELLER_MODULE } from '../modules/seller';
-import { seedProducts } from './seed/products';
+import { seedProducts, SELLER_HANDLE_BY_TITLE } from './seed/products';
 import { generateReviewResponse, reviewContents, texasCustomers } from './seed/reviews';
 
 export default async function seedDemoData({ container }: ExecArgs) {
@@ -38,9 +38,9 @@ export default async function seedDemoData({ container }: ExecArgs) {
 
   const paymentModuleService: IPaymentModuleService = container.resolve(Modules.PAYMENT);
 
-  const canadianCountries = ['ca'];
+  const philippineCountries = ['ph'];
   const americanCountries = ['us'];
-  const allCountries = [...canadianCountries, ...americanCountries];
+  const allCountries = [...philippineCountries, ...americanCountries];
 
   logger.info('Seeding store data...');
 
@@ -73,7 +73,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
             is_default: true,
           },
           {
-            currency_code: 'cad',
+            currency_code: 'php',
           },
         ],
         default_sales_channel_id: defaultSalesChannel[0].id,
@@ -92,16 +92,16 @@ export default async function seedDemoData({ container }: ExecArgs) {
           payment_providers: ['pp_stripe_stripe'],
         },
         {
-          name: 'Canada',
-          currency_code: 'cad',
-          countries: canadianCountries,
+          name: 'Philippines',
+          currency_code: 'php',
+          countries: philippineCountries,
           payment_providers: ['pp_stripe_stripe'],
         },
       ],
     },
   });
   const usRegion = regionResult[0];
-  const caRegion = regionResult[1];
+  const phRegion = regionResult[1];
   logger.info('Finished seeding regions.');
 
   logger.info('Seeding tax regions...');
@@ -244,16 +244,16 @@ export default async function seedDemoData({ container }: ExecArgs) {
             amount: 5,
           },
           {
-            currency_code: 'cad',
-            amount: 5,
+            currency_code: 'php',
+            amount: 5 * 58,
           },
           {
             region_id: usRegion.id,
             amount: 5,
           },
           {
-            region_id: caRegion.id,
-            amount: 5,
+            region_id: phRegion.id,
+            amount: 5 * 58,
           },
         ],
         rules: [
@@ -286,16 +286,16 @@ export default async function seedDemoData({ container }: ExecArgs) {
             amount: 10,
           },
           {
-            currency_code: 'cad',
-            amount: 10,
+            currency_code: 'php',
+            amount: 10 * 58,
           },
           {
             region_id: usRegion.id,
             amount: 10,
           },
           {
-            region_id: caRegion.id,
-            amount: 10,
+            region_id: phRegion.id,
+            amount: 10 * 58,
           },
         ],
         rules: [
@@ -489,11 +489,20 @@ export default async function seedDemoData({ container }: ExecArgs) {
       }),
     },
   });
+  const sellerIdByHandle = new Map(sellers.map((seller) => [seller.handle, seller.id]));
+
   await remoteLink.create(
-    productResult.map((product, index) => ({
-      [Modules.PRODUCT]: { product_id: product.id },
-      seller: { seller_id: sellers[index % sellers.length].id },
-    })),
+    productResult.map((product) => {
+      const desiredHandle = SELLER_HANDLE_BY_TITLE[product.title];
+      const sellerId = desiredHandle ? sellerIdByHandle.get(desiredHandle) : undefined;
+      if (!sellerId) {
+        throw new Error(`No seller mapping found for product "${product.title}"`);
+      }
+      return {
+        [Modules.PRODUCT]: { product_id: product.id },
+        seller: { seller_id: sellerId },
+      };
+    }),
   );
 
   for (const product of productResult) {

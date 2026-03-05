@@ -53,7 +53,12 @@ export const getDefaultRegion = async function () {
     console.error(err);
     return [];
   });
-  return regions.sort((r) => (r.countries?.some((c) => c.iso_2 === 'us') ? -1 : 1))[0];
+  const scoreRegion = (region: (typeof regions)[number]) => {
+    if (region.countries?.some((c) => c.iso_2 === 'ph')) return 0;
+    if (region.countries?.some((c) => c.iso_2 === 'us')) return 1;
+    return 2;
+  };
+  return regions.sort((a, b) => scoreRegion(a) - scoreRegion(b))[0];
 };
 
 export const getSelectedRegion = async (headers: Headers) => {
