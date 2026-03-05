@@ -378,7 +378,9 @@ export default async function seedDemoData({ container }: ExecArgs) {
       ],
     },
   });
-  const sellerService = container.resolve(SELLER_MODULE);
+  const sellerService = container.resolve(SELLER_MODULE) as {
+    createSellers: (data: Array<Record<string, unknown>>) => Promise<Array<{ id: string; handle: string }>>;
+  };
   const sellers = await sellerService.createSellers([
     {
       name: "Urban Thread",
@@ -489,10 +491,10 @@ export default async function seedDemoData({ container }: ExecArgs) {
       }),
     },
   });
-  const sellerIdByHandle = new Map(sellers.map((seller) => [seller.handle, seller.id]));
+  const sellerIdByHandle = new Map(sellers.map((seller: { handle: string; id: string }) => [seller.handle, seller.id]));
 
   await remoteLink.create(
-    productResult.map((product) => {
+    productResult.map((product: any) => {
       const desiredHandle = SELLER_HANDLE_BY_TITLE[product.title];
       const sellerId = desiredHandle ? sellerIdByHandle.get(desiredHandle) : undefined;
       if (!sellerId) {

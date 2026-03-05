@@ -9,7 +9,9 @@ import { SELLER_HANDLE_BY_TITLE } from "./seed/products";
 export default async function fixSellerLinks({ container }: ExecArgs) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
   const productModuleService: IProductModuleService = container.resolve(Modules.PRODUCT);
-  const sellerService = container.resolve(SELLER_MODULE);
+  const sellerService = container.resolve(SELLER_MODULE) as {
+    listSellers: (filters: Record<string, unknown>, config: { take: number }) => Promise<Array<{ id: string; handle: string }>>;
+  };
 
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -17,7 +19,7 @@ export default async function fixSellerLinks({ container }: ExecArgs) {
   }
 
   const sellers = await sellerService.listSellers({}, { take: 200 });
-  const sellerIdByHandle = new Map(sellers.map((seller: any) => [seller.handle, seller.id]));
+  const sellerIdByHandle = new Map(sellers.map((seller) => [seller.handle, seller.id]));
 
   const products = await productModuleService.listProducts({}, { select: ["id", "title"] });
 

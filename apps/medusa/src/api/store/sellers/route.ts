@@ -2,7 +2,9 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework";
 import { SELLER_MODULE } from "../../../modules/seller";
 
 export async function GET(req: MedusaRequest, res: MedusaResponse): Promise<void> {
-  const sellerService = req.scope.resolve(SELLER_MODULE);
+  const sellerService = req.scope.resolve(SELLER_MODULE) as {
+    listAndCountSellers: (filters: Record<string, unknown>, config: { take: number; skip: number }) => Promise<[any[], number]>;
+  };
   const limit = Number(req.query.limit ?? 20);
   const offset = Number(req.query.offset ?? 0);
 
