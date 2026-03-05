@@ -6,8 +6,9 @@ const REDIS_URL = process.env.REDIS_URL;
 const STRIPE_API_KEY = process.env.STRIPE_API_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const IS_TEST = process.env.NODE_ENV === 'test';
+const DISABLE_MEDUSA_ADMIN = process.env.DISABLE_MEDUSA_ADMIN === 'true';
 
-const cacheModule = IS_TEST
+const cacheModule = (IS_TEST || !REDIS_URL)
   ? { resolve: '@medusajs/medusa/cache-inmemory' }
   : {
       resolve: '@medusajs/medusa/cache-redis',
@@ -16,7 +17,7 @@ const cacheModule = IS_TEST
       },
     };
 
-const eventBusModule = IS_TEST
+const eventBusModule = (IS_TEST || !REDIS_URL)
   ? { resolve: '@medusajs/medusa/event-bus-local' }
   : {
       resolve: '@medusajs/medusa/event-bus-redis',
@@ -25,7 +26,7 @@ const eventBusModule = IS_TEST
       },
     };
 
-const workflowEngineModule = IS_TEST
+const workflowEngineModule = (IS_TEST || !REDIS_URL)
   ? { resolve: '@medusajs/medusa/workflow-engine-inmemory' }
   : {
       resolve: '@medusajs/medusa/workflow-engine-redis',
@@ -85,6 +86,7 @@ module.exports = defineConfig({
     workflowEngineModule,
   ],
   admin: {
+    disable: DISABLE_MEDUSA_ADMIN,
     backendUrl: process.env.ADMIN_BACKEND_URL,
     vite: (config) => {
       return {

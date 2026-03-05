@@ -15,9 +15,11 @@
   "scripts": {
     "nukedb": "docker-compose down -v && docker-compose up -d && powershell -Command \"Start-Sleep -Seconds 10\"",
     "build": "medusa build",
+    "build:render": "NODE_OPTIONS=--max_old_space_size=384 medusa build",
     "seed": "medusa exec ./src/scripts/seed.ts",
     "repair-prices": "medusa exec ./src/scripts/repair-variant-prices.ts",
     "start": "medusa start",
+    "start:render:lowmem": "DISABLE_MEDUSA_ADMIN=true NODE_OPTIONS=--max_old_space_size=384 medusa start --host 0.0.0.0 --port ${PORT:-9000}",
     "dev": "medusa develop",
     "sync": "medusa db:sync-links",
     "migrate:prod": "medusa db:migrate",
