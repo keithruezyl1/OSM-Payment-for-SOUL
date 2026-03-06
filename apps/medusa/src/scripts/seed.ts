@@ -153,8 +153,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
 
   const shippingProfile = shippingProfileResult[0];
 
-  const northAmericanFulfillmentSet = await fulfillmentModuleService.createFulfillmentSets({
-    name: 'North American delivery',
+  const marketplaceFulfillmentSet = await fulfillmentModuleService.createFulfillmentSets({
+    name: 'Marketplace delivery',
     type: 'shipping',
     service_zones: [
       {
@@ -167,10 +167,10 @@ export default async function seedDemoData({ container }: ExecArgs) {
         ],
       },
       {
-        name: 'Canada',
+        name: 'Philippines',
         geo_zones: [
           {
-            country_code: 'ca',
+            country_code: 'ph',
             type: 'country',
           },
         ],
@@ -183,7 +183,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
       stock_location_id: americanStockLocation.id,
     },
     [Modules.FULFILLMENT]: {
-      fulfillment_set_id: northAmericanFulfillmentSet.id,
+      fulfillment_set_id: marketplaceFulfillmentSet.id,
     },
   });
 
@@ -224,7 +224,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
         name: 'Standard Shipping',
         price_type: 'flat',
         provider_id: 'manual_manual',
-        service_zone_id: northAmericanFulfillmentSet.service_zones[0].id,
+        service_zone_id: marketplaceFulfillmentSet.service_zones[0].id,
         shipping_profile_id: shippingProfile.id,
         type: {
           label: 'Standard',
@@ -266,7 +266,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
         name: 'Express Shipping',
         price_type: 'flat',
         provider_id: 'manual_manual',
-        service_zone_id: northAmericanFulfillmentSet.service_zones[0].id,
+        service_zone_id: marketplaceFulfillmentSet.service_zones[0].id,
         shipping_profile_id: shippingProfile.id,
         type: {
           label: 'Express',
