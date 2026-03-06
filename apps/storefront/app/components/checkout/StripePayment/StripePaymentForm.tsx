@@ -31,10 +31,6 @@ export const StripePaymentForm: FC<StripePaymentFormProps> = ({ isActiveStep, pa
     elements.fetchUpdates();
   }, [activePaymentSession?.payment?.updated_at]); // TODO: CHECK if this is correct
 
-  const hasPaymentMethods = stripePaymentMethods.length > 0;
-
-  const initialPaymentMethodId = hasPaymentMethods ? stripePaymentMethods[0].data?.id : 'new';
-
   useEffect(() => {
     if (isActiveStep && stripeElement) stripeElement.focus();
   }, [isActiveStep, stripeElement]);
@@ -57,6 +53,14 @@ export const StripePaymentForm: FC<StripePaymentFormProps> = ({ isActiveStep, pa
       submit(event.target as HTMLFormElement);
       return;
     }
+
+    const mountedPaymentElement = elements.getElement(PaymentElement);
+    if (!mountedPaymentElement) {
+      setStripeError('Payment form is still loading. Please wait a moment and try again.');
+      setSubmitting(false);
+      return;
+    }
+
     // NOTE: We default the cart billing address to be the same as the shipping address in the `ACCOUNT_DETAILS` step.
     const address = (
       data.sameAsShipping ? medusaAddressToAddress(cart.billing_address as MedusaAddress) : data.billingAddress
@@ -78,13 +82,19 @@ export const StripePaymentForm: FC<StripePaymentFormProps> = ({ isActiveStep, pa
 
     setSubmitting(true);
 
+    const { error: submitError } = await elements.submit();
+    if (submitError) {
+      setStripeError(submitError.message ?? 'Please check your payment details and try again.');
+      setSubmitting(false);
+      return;
+    }
+
     return stripe
       .confirmPayment({
         //`Elements` instance that was used to create the Payment Element
         elements,
         confirmParams: {
-          // return_url: siteURL(redirectPath),
-          return_url: 'http://localhost:3000/checkout/success',
+          return_url: `${window.location.origin}/checkout/success`,
 
           // We need to add the billing details manually because we are disabling
           // the billing address fields on the `PaymentElement`
@@ -126,11 +136,7 @@ export const StripePaymentForm: FC<StripePaymentFormProps> = ({ isActiveStep, pa
         paymentMethods={stripePaymentMethods}
         onSubmit={handleSubmit}
       >
-        <div
-          className={clsx({
-            'h-0 overflow-hidden opacity-0': hasPaymentMethods && initialPaymentMethodId !== 'new',
-          })}
-        >
+        <div>
           <PaymentElement
             onReady={handlePaymentElementReady}
             className="my-6 w-full"

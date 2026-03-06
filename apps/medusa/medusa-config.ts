@@ -7,6 +7,12 @@ const STRIPE_API_KEY = process.env.STRIPE_API_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const IS_TEST = process.env.NODE_ENV === 'test';
 const DISABLE_MEDUSA_ADMIN = process.env.DISABLE_MEDUSA_ADMIN === 'true';
+const ENABLE_PRODUCT_REVIEWS = process.env.ENABLE_PRODUCT_REVIEWS === 'true';
+const DATABASE_URL = process.env.DATABASE_URL || '';
+const USE_DB_SSL =
+  process.env.DB_SSL === 'true' ||
+  process.env.NODE_ENV === 'production' ||
+  DATABASE_URL.includes('sslmode=require');
 
 const cacheModule = (IS_TEST || !REDIS_URL)
   ? { resolve: '@medusajs/medusa/cache-inmemory' }
@@ -39,10 +45,16 @@ const workflowEngineModule = (IS_TEST || !REDIS_URL)
 
 module.exports = defineConfig({
   projectConfig: {
-    databaseUrl: process.env.DATABASE_URL,
-    databaseDriverOptions: {
-      ssl: false,
-    },
+    databaseUrl: DATABASE_URL,
+    databaseDriverOptions: USE_DB_SSL
+      ? {
+          ssl: {
+            rejectUnauthorized: false,
+          },
+        }
+      : {
+          ssl: false,
+        },
     redisUrl: REDIS_URL,
 
     redisPrefix: process.env.REDIS_PREFIX,
@@ -54,12 +66,14 @@ module.exports = defineConfig({
       cookieSecret: process.env.COOKIE_SECRET || 'supersecret',
     },
   },
-  plugins: [
-    {
-      resolve: '@lambdacurry/medusa-product-reviews',
-      options: {},
-    },
-  ],
+  plugins: ENABLE_PRODUCT_REVIEWS
+    ? [
+        {
+          resolve: '@lambdacurry/medusa-product-reviews',
+          options: {},
+        },
+      ]
+    : [],
   modules: [
     {
       resolve: "./src/modules/seller",
