@@ -468,3 +468,232 @@ This order gives ServiceNow a usable baseline earliest (orders + payment) before
 - Customer linking on guest checkout is implemented via subscriber (`order.created` -> customer create/link).
 - Refund policy, approval workflow state, and custom case/line records are not native in current Medusa modules and require custom storage + routes.
 - If Admin remains disabled in prod, extraction endpoints should not depend on Admin authentication UI; use integration-key auth middleware.
+
+---
+
+## Customer + Order Extraction (Priority Scope)
+
+This is the minimum extraction surface for your stated goal: customer details, order header, and per-order details.
+
+### A) Required Endpoints
+
+| Endpoint | Purpose | Status |
+|---|---|---|
+| `GET /store/oms/customers` | Customer master feed for ServiceNow consumer mapping | Contract (to implement) |
+| `GET /store/oms/customers/:id` | Single customer detail | Contract (to implement) |
+| `GET /store/oms/orders` | Order header feed with customer linkage | Contract (to implement) |
+| `GET /store/oms/orders/:id` | Full order detail for a single order | Contract (to implement) |
+| `GET /store/oms/orders/:id/lines` | Normalized order line details | Contract (to implement) |
+| `GET /store/oms/orders/:id/payments` | Payment intent/transaction details | Contract (to implement) |
+| `GET /store/oms/orders/:id/refunds` | Refund state and refund transactions | Contract (to implement) |
+
+### B) Customer Field Mapping
+
+| ServiceNow Target | Field | OMS Endpoint | JSON Path | Notes |
+|---|---|---|---|---|
+| `csm_consumer` (or your chosen consumer table) | `customer_id` | `GET /store/oms/customers` | `customers[].id` | Primary key for joins |
+| `csm_consumer` | `email` | `GET /store/oms/customers` | `customers[].email` | Required for guest-to-customer linking |
+| `csm_consumer` | `first_name` | `GET /store/oms/customers` | `customers[].first_name` | Optional |
+| `csm_consumer` | `last_name` | `GET /store/oms/customers` | `customers[].last_name` | Optional |
+| `csm_consumer` | `phone` | `GET /store/oms/customers` | `customers[].phone` | Optional |
+| `csm_consumer` | `created_at` | `GET /store/oms/customers` | `customers[].created_at` | For audit timeline |
+| `csm_consumer` | `updated_at` | `GET /store/oms/customers` | `customers[].updated_at` | Delta sync watermark |
+
+### C) Order Header Mapping
+
+| ServiceNow Table | Field | OMS Endpoint | JSON Path | Notes |
+|---|---|---|---|---|
+| `x_eygds_soul_oms_order_integration` | `display_id` | `GET /store/oms/orders` | `orders[].display_id` | Business order number |
+| `x_eygds_soul_oms_order_integration` | `customer_id` | `GET /store/oms/orders` | `orders[].customer_id` | Reference to consumer |
+| `x_eygds_soul_oms_order_integration` | `created_at` | `GET /store/oms/orders` | `orders[].created_at` | Order date |
+| `x_eygds_soul_oms_order_integration` | `order_status` | `GET /store/oms/orders` | `orders[].order_status` | Normalize to `shipped|delivered|returned` |
+| `x_eygds_soul_oms_order_integration` | `total` | `GET /store/oms/orders` | `orders[].total` | Convert minor units if needed |
+| `x_eygds_soul_oms_order_integration` | `transaction_id` | `GET /store/oms/orders` | `orders[].transaction_id` | Stripe PI or charge reference |
+| `x_eygds_soul_oms_order_integration` | `items` | `GET /store/oms/orders/:id` | `order.items` | Store JSON snapshot |
+
+### D) Per-Order Detail Mapping
+
+| ServiceNow Table | Field | OMS Endpoint | JSON Path | Notes |
+|---|---|---|---|---|
+| `x_eygds_soul_sn_order_case` | `order_id` | `GET /store/oms/orders/:id` | `order.id` | Base join key |
+| `x_eygds_soul_sn_order_case` | `transaction_id` | `GET /store/oms/orders/:id/payments` | `payments[0].payment_intent` | Latest successful PI |
+| `x_eygds_soul_sn_order_case` | `total_refundable` | `GET /store/oms/orders/:id` | `order.summary.total_refundable` | Derived total |
+| `x_eygds_soul_order_refund_line` | `sold_product` | `GET /store/oms/orders/:id/lines` | `lines[].sold_product` | Source line reference |
+| `x_eygds_soul_order_refund_line` | `line_total` | `GET /store/oms/orders/:id/lines` | `lines[].line_total` | Decimal |
+| `x_eygds_soul_refund_request` | `transaction_reference` | `GET /store/oms/orders/:id/refunds` | `refunds[].id` | Stripe refund id |
+| `x_eygds_soul_payment_system` | `payment_intent` | `GET /store/oms/orders/:id/payments` | `payments[].payment_intent` | PI id |
+| `x_eygds_soul_payment_system` | `amount` | `GET /store/oms/orders/:id/payments` | `payments[].amount` | Decimal |
+| `x_eygds_soul_payment_system` | `status` | `GET /store/oms/orders/:id/payments` | `payments[].status` | `pending|succeeded|failed` |
+
+### E) Query Parameters (Recommended for Integration Hub)
+
+Use on `GET /store/oms/customers` and `GET /store/oms/orders`:
+- `updated_from` (ISO datetime)
+- `updated_to` (ISO datetime)
+- `limit` (default 100, max 500)
+- `offset` (default 0)
+
+---
+
+## Postman Commands to Create a Checkout Record
+
+Use this sequence to generate an actual OMS order record from checkout.
+
+### Variables
+
+Create Postman variables:
+- `BASE_URL` = `https://osm-payment-for-soul.onrender.com`
+- `PUBLISHABLE_KEY` = `pk_...`
+- `REGION_ID` = (fill after step 1)
+- `VARIANT_ID` = (fill from product API)
+- `CART_ID` = (set after step 2)
+- `PAYMENT_COLLECTION_ID` = (set after step 7)
+- `PAYMENT_INTENT_ID` = (set after step 7)
+- `STRIPE_SECRET_KEY` = `sk_test_...` (for test confirmation)
+
+### Headers (Medusa store API calls)
+
+- `x-publishable-api-key: {{PUBLISHABLE_KEY}}`
+- `Content-Type: application/json`
+
+
+
+
+
+
+### 1) Get region id
+
+```http
+GET {{BASE_URL}}/store/regions
+```
+
+Copy US region `id` into `REGION_ID`.
+
+### 2) Create cart
+
+```http
+POST {{BASE_URL}}/store/carts
+```
+
+Body:
+```json
+{
+  "region_id": "{{REGION_ID}}"
+}
+```
+
+Save `cart.id` into `CART_ID`.
+
+### 3) Add line item
+
+```http
+POST {{BASE_URL}}/store/carts/{{CART_ID}}/line-items
+```
+
+Body:
+```json
+{
+  "variant_id": "{{VARIANT_ID}}",
+  "quantity": 1
+}
+```
+
+### 4) Add customer + addresses
+
+```http
+POST {{BASE_URL}}/store/carts/{{CART_ID}}
+```
+
+Body:
+```json
+{
+  "email": "checkout.test@example.com",
+  "shipping_address": {
+    "first_name": "Test",
+    "last_name": "Buyer",
+    "address_1": "123 Main St",
+    "city": "New York",
+    "province": "NY",
+    "postal_code": "10001",
+    "country_code": "us",
+    "phone": "+12125550123"
+  },
+  "billing_address": {
+    "first_name": "Test",
+    "last_name": "Buyer",
+    "address_1": "123 Main St",
+    "city": "New York",
+    "province": "NY",
+    "postal_code": "10001",
+    "country_code": "us",
+    "phone": "+12125550123"
+  }
+}
+```
+
+### 5) List shipping options
+
+```http
+GET {{BASE_URL}}/store/shipping-options?cart_id={{CART_ID}}
+```
+
+Copy one `shipping_option.id`.
+
+### 6) Attach shipping method
+
+```http
+POST {{BASE_URL}}/store/carts/{{CART_ID}}/shipping-methods
+```
+
+Body:
+```json
+{
+  "option_id": "so_..."
+}
+```
+
+### 7) Initialize Stripe session
+
+```http
+POST {{BASE_URL}}/store/payment-collections/{{PAYMENT_COLLECTION_ID}}/payment-sessions
+```
+
+First get `payment_collection.id` from:
+```http
+GET {{BASE_URL}}/store/carts/{{CART_ID}}
+```
+
+Then run:
+```json
+{
+  "provider_id": "pp_stripe_stripe"
+}
+```
+
+From response, capture Stripe `payment_intent` id (`pi_...`) into `PAYMENT_INTENT_ID`.
+
+### 8) Confirm Stripe PaymentIntent (test)
+
+```http
+POST https://api.stripe.com/v1/payment_intents/{{PAYMENT_INTENT_ID}}/confirm
+Authorization: Bearer {{STRIPE_SECRET_KEY}}
+Content-Type: application/x-www-form-urlencoded
+```
+
+Body (x-www-form-urlencoded):
+- `payment_method=pm_card_visa`
+
+### 9) Complete cart to create order record
+
+```http
+POST {{BASE_URL}}/store/carts/{{CART_ID}}/complete
+```
+
+Successful response includes:
+- `order.id`
+- `order.display_id`
+- `order.customer_id`
+- `order.items[]`
+- `order.total`
+
+This is the order record that should flow into your OMS extraction endpoints.

@@ -29,6 +29,18 @@ export const fetchProducts = async (
 ): Promise<{ products: MarketplaceProduct[]; count: number; limit: number; offset: number }> => {
   const region = await getSelectedRegion(request.headers);
   const customerZip = await getCustomerZip(request);
+  const fallbackLimit = Number(query?.limit ?? 50);
+  const fallbackOffset = Number(query?.offset ?? 0);
+
+  // Avoid crashing product pages when region resolution fails in production.
+  if (!region?.id) {
+    return {
+      products: [],
+      count: 0,
+      limit: fallbackLimit,
+      offset: fallbackOffset,
+    };
+  }
 
   return await cachified({
     key: `marketplace-products-${JSON.stringify({ query, region: region.id, customerZip })}`,
